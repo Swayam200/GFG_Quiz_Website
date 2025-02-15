@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GeeksForGeeks Quiz</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="gfg-header">
+        <img src="https://media.geeksforgeeks.org/gfg-gg-logo.svg" alt="GeeksForGeeks Logo" class="gfg-logo">
+        <h1>GeeksForGeeks GeekGala - Riddle Booth</h1>
+    </div>
+
+    <div class="container">
+        <div id="join-screen" class="player-card">
+            <h2><i class="fas fa-user-plus"></i> Join Quiz</h2>
+            <input type="text" id="player-name" placeholder="Enter your name">
+            <input type="text" id="room-code" placeholder="Enter room code">
+            <button id="join-quiz">Join Quiz</button>
+            <p id="error-message" style="display: none;"></p>
+        </div>
+
+        <div id="waiting-screen" class="player-card" style="display: none;">
+            <h2><i class="fas fa-clock"></i> Waiting for Quiz to Start</h2>
+            <p>You've joined successfully!</p>
+            <div class="loader"></div>
+        </div>
+
+        <div id="quiz-screen" style="display: none;">
+            <div id="question-text"></div>
+            <div id="options-container"></div>
+        </div>
+
+        <div id="top-players" class="top-players" style="display: none;">
+            <h3><i class="fas fa-trophy"></i> Top Players</h3>
+            <div id="leaderboard-list"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentRoomCode = '';
+        let questions = [];
+        let currentQuestionIndex = 0;
+
+        // DOM Elements
+        const joinScreen = document.getElementById('join-screen');
+        const waitingScreen = document.getElementById('waiting-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const topPlayers = document.getElementById('top-players');
+        const joinBtn = document.getElementById('join-quiz');
+        const playerNameInput = document.getElementById('player-name');
+        const roomCodeInput = document.getElementById('room-code');
+        const errorMessage = document.getElementById('error-message');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const leaderboardList = document.getElementById('leaderboard-list');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // Join Quiz
+        joinBtn.addEventListener('click', () => {
+            const playerName = playerNameInput.value.trim();
+            const roomCode = roomCodeInput.value.trim();
+            if (playerName && roomCode) {
+                currentRoomCode = roomCode;
+                socket.emit('join-quiz', { playerName, roomCode });
+            } else {
+                showError('Please enter both name and room code');
+            }
+        });
+
+        // Handle join response
+        socket.on('joined-successfully', ({ questions: quizQuestions, isActive }) => {
+            questions = quizQuestions;
+            joinScreen.style.display = 'none';
+            topPlayers.style.display = 'block';
+            if (isActive) {
+                startQuiz();
+            } else {
+                waitingScreen.style.display = 'block';
+            }
+        });
+
+        socket.on('join-error', (message) => {
+            showError(message);
+        });
+
+        // Quiz starts
+        socket.on('quiz-started', ({ questions: quizQuestions }) => {
+            questions = quizQuestions;
+            startQuiz();
+        });
+
+        function startQuiz() {
+            waitingScreen.style.display = 'none';
+            quizScreen.style.display = 'block';
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                questionText.innerHTML = `
+                    <div class="player-card">
+                        <h2><i class="fas fa-check-circle"></i> Quiz completed!</h2>
+                        <p>Check the leaderboard for your final position.</p>
+                    </div>
+                `;
+                optionsContainer.innerHTML = '';
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            questionText.textContent = `Question ${currentQuestionIndex + 1}: ${question.question}`;
+            optionsContainer.innerHTML = '';
+
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + index)}.</span> ${option}`;
+                button.addEventListener('click', () => submitAnswer(index));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function submitAnswer(answerIndex) {
+            socket.emit('submit-answer', {
+                roomCode: currentRoomCode,
+                questionIndex: currentQuestionIndex,
+                answer: answerIndex
+            });
+
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        // Update Leaderboard
+        socket.on('leaderboard-update', (players) => {
+            leaderboardList.innerHTML = '';
+            players
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 10) // Show only top 10 players in player view
+                .forEach((player, index) => {
+                    const li = document.createElement('div');
+                    li.className = 'leaderboard-item';
+                    li.innerHTML = `
+                        <div class="rank">#${index + 1}</div>
+                        <div class="player-info">
+                            <div class="player-name">${player.name}</div>
+                            <div class="score">${player.score} points</div>
+                        </div>
+                        ${player.completed ? '<i class="fas fa-check-circle" style="color: var(--gfg-green)"></i>' : ''}
+                    `;
+                    leaderboardList.appendChild(li);
+                });
+        });
+
+        // Handle disconnection
+        socket.on('disconnect', () => {
+            showError('Lost connection to server. Please refresh the page.');
+        });
+
+        // Handle reconnection
+        socket.on('connect', () => {
+            if (currentRoomCode) {
+                const playerName = playerNameInput.value.trim();
+                socket.emit('join-quiz', { playerName, roomCode: currentRoomCode });
+            }
+        });
+    </script>
+</body>
+
+</html>

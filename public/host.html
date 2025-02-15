@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GeeksForGeeks Quiz Host</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="gfg-header">
+        <img src="https://media.geeksforgeeks.org/gfg-gg-logo.svg" alt="GeeksForGeeks Logo" class="gfg-logo">
+        <h1>GeeksForGeeks GeekGala - Riddle Booth</h1>
+    </div>
+
+    <div class="host-container">
+        <div id="setup-screen">
+            <div class="player-card">
+                <h2><i class="fas fa-gamepad"></i> Create Quiz Room</h2>
+                <input type="text" id="room-code" placeholder="Enter room code">
+                <button id="create-room">Create Room</button>
+            </div>
+        </div>
+
+        <div id="host-screen" style="display: none;">
+            <div class="gfg-header">
+                <h2>Room Code: <span id="display-room-code"></span></h2>
+                <button id="start-quiz">Start Quiz</button>
+                <div id="player-count">Connected Players: <span id="player-counter">0</span></div>
+            </div>
+
+            <div id="leaderboard" class="leaderboard-grid"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentRoomCode = '';
+
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const hostScreen = document.getElementById('host-screen');
+        const createRoomBtn = document.getElementById('create-room');
+        const startQuizBtn = document.getElementById('start-quiz');
+        const roomCodeInput = document.getElementById('room-code');
+        const displayRoomCode = document.getElementById('display-room-code');
+        const leaderboard = document.getElementById('leaderboard');
+        const playerCounter = document.getElementById('player-counter');
+
+        // Create Room
+        createRoomBtn.addEventListener('click', () => {
+            const roomCode = roomCodeInput.value.trim();
+            if (roomCode) {
+                socket.emit('create-room', roomCode);
+            }
+        });
+
+        // Room Created Successfully
+        socket.on('room-created', (roomCode) => {
+            currentRoomCode = roomCode;
+            setupScreen.style.display = 'none';
+            hostScreen.style.display = 'block';
+            displayRoomCode.textContent = roomCode;
+        });
+
+        // Start Quiz
+        startQuizBtn.addEventListener('click', () => {
+            socket.emit('start-quiz', currentRoomCode);
+            startQuizBtn.disabled = true;
+        });
+
+        // Update Leaderboard
+        socket.on('leaderboard-update', (players) => {
+            leaderboard.innerHTML = '';
+            playerCounter.textContent = players.length;
+
+            players
+                .sort((a, b) => b.score - a.score)
+                .forEach((player, index) => {
+                    const playerEl = document.createElement('div');
+                    playerEl.className = 'leaderboard-item';
+
+                    playerEl.innerHTML = `
+                        <div class="rank">#${index + 1}</div>
+                        <div class="player-info">
+                            <div class="player-name">${player.name}</div>
+                            <div class="score">${player.score} points</div>
+                        </div>
+                        ${player.completed ? '<i class="fas fa-check-circle" style="color: var(--gfg-green)"></i>' : ''}
+                    `;
+
+                    leaderboard.appendChild(playerEl);
+                });
+        });
+    </script>
+</body>
+
+</html>
