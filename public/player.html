@@ -5,6 +5,100 @@
     <title>GeeksForGeeks Quiz</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Improved UI for player page */
+        body {
+            background: linear-gradient(135deg, #f0f8ff, #e6e6fa);
+        }
+
+        .gfg-header {
+            font-size: 1.5em;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+
+        #join-screen,
+        #waiting-screen,
+        #quiz-screen,
+        #completed-screen {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            margin: 8px 0;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+
+        button {
+            padding: 12px 24px;
+            margin: 8px 0;
+            background-color: var(--gfg-green);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #236b35;
+        }
+
+        #question-text {
+            font-size: 1.8em;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .option-btn {
+            font-size: 1.2em;
+            padding: 15px 20px;
+            margin: 10px 0;
+            width: 100%;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .option-btn:hover {
+            background: #d0e0f0;
+        }
+
+        #timer-container {
+            margin-bottom: 20px;
+        }
+
+        #timer-text {
+            font-size: 1.5em;
+        }
+
+        #hint {
+            font-size: 1.2em;
+            margin: 10px 0;
+            text-align: center;
+            color: #ff6600;
+            font-style: italic;
+        }
+    </style>
 </head>
 
 <body>
@@ -30,10 +124,10 @@
         <div id="quiz-screen" style="display: none;">
             <div id="timer-container">
                 <div id="timer-bar"></div>
-                <div id="timer-text">30</div>
+                <div id="timer-text">20</div>
             </div>
             <div id="question-text"></div>
-            <div id="hint" style="display: none; font-style: italic; color: #555;"></div>
+            <div id="hint" style="display: none;"></div>
             <div id="options-container"></div>
         </div>
 
@@ -58,7 +152,7 @@
         let currentQuestionIndex = 0;
         let isCompleted = false;
         let timer;
-        let timeLeft = 30;
+        let timeLeft = 20;
         let questionStartTime;
         let hintTimeout;
 
@@ -80,8 +174,6 @@
         const timerBar = document.getElementById('timer-bar');
         const timerText = document.getElementById('timer-text');
 
-        // Disable auto rejoin to ensure fresh sessions
-
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
@@ -90,7 +182,6 @@
             }, 3000);
         }
 
-        // Join Quiz
         joinBtn.addEventListener('click', () => {
             const playerName = playerNameInput.value.trim();
             if (playerName) {
@@ -107,7 +198,6 @@
             }
         });
 
-        // New Player button handler: open a fresh page
         newPlayerBtn.addEventListener('click', () => {
             localStorage.removeItem('gfg_player_name');
             localStorage.removeItem('gfg_quiz_completed');
@@ -115,7 +205,6 @@
             window.close();
         });
 
-        // Handle join response
         socket.on('joined-successfully', ({ questions: quizQuestions, isActive, isCompleted: completed, currentQuestion }) => {
             questions = quizQuestions;
             joinScreen.style.display = 'none';
@@ -159,24 +248,24 @@
         function startTimer() {
             clearInterval(timer);
             clearTimeout(hintTimeout);
-            timeLeft = 30;
+            timeLeft = 20;
             questionStartTime = Date.now();
             timerText.textContent = timeLeft;
             timerBar.style.width = '100%';
 
-            // Show hint after 15 seconds
+            // Show hint after 10 seconds
             hintTimeout = setTimeout(() => {
                 if (questions[currentQuestionIndex] && questions[currentQuestionIndex].hint) {
                     hintDiv.textContent = `Hint: ${questions[currentQuestionIndex].hint}`;
                     hintDiv.style.display = 'block';
                 }
-            }, 15000);
+            }, 10000);
 
             timer = setInterval(() => {
                 timeLeft--;
                 timerText.textContent = timeLeft;
-                timerBar.style.width = `${(timeLeft / 30) * 100}%`;
-                if (timeLeft <= 10) {
+                timerBar.style.width = `${(timeLeft / 20) * 100}%`;
+                if (timeLeft <= 5) {
                     timerBar.style.backgroundColor = '#dc3545';
                 } else {
                     timerBar.style.backgroundColor = 'var(--gfg-green)';
@@ -220,7 +309,7 @@
         function submitAnswer(answerIndex) {
             clearInterval(timer);
             clearTimeout(hintTimeout);
-            const timeSpent = Math.min(30, Math.round((Date.now() - questionStartTime) / 1000));
+            const timeSpent = Math.min(20, Math.round((Date.now() - questionStartTime) / 1000));
             socket.emit('submit-answer', {
                 questionIndex: currentQuestionIndex,
                 answer: answerIndex,
