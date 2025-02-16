@@ -17,7 +17,6 @@
         <div id="join-screen" class="player-card">
             <h2><i class="fas fa-user-plus"></i> Join Quiz</h2>
             <input type="text" id="player-name" placeholder="Enter your name">
-            <input type="text" id="room-code" placeholder="Enter room code">
             <button id="join-quiz">Join Quiz</button>
             <p id="error-message" style="display: none;"></p>
         </div>
@@ -29,8 +28,20 @@
         </div>
 
         <div id="quiz-screen" style="display: none;">
+            <div id="timer-container">
+                <div id="timer-bar"></div>
+                <div id="timer-text">30</div>
+            </div>
             <div id="question-text"></div>
+            <div id="hint" style="display: none; font-style: italic; color: #555;"></div>
             <div id="options-container"></div>
+        </div>
+
+        <div id="completed-screen" class="player-card" style="display: none;">
+            <h2><i class="fas fa-check-circle"></i> Quiz completed!</h2>
+            <p>Your final score: <span id="final-score">0</span> points</p>
+            <p>Check the leaderboard for your final position.</p>
+            <button id="new-player-btn">Play as New Player</button>
         </div>
 
         <div id="top-players" class="top-players" style="display: none;">
@@ -42,22 +53,34 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let currentRoomCode = '';
+        let currentPlayerName = '';
         let questions = [];
         let currentQuestionIndex = 0;
+        let isCompleted = false;
+        let timer;
+        let timeLeft = 30;
+        let questionStartTime;
+        let hintTimeout;
 
         // DOM Elements
         const joinScreen = document.getElementById('join-screen');
         const waitingScreen = document.getElementById('waiting-screen');
         const quizScreen = document.getElementById('quiz-screen');
+        const completedScreen = document.getElementById('completed-screen');
         const topPlayers = document.getElementById('top-players');
         const joinBtn = document.getElementById('join-quiz');
+        const newPlayerBtn = document.getElementById('new-player-btn');
         const playerNameInput = document.getElementById('player-name');
-        const roomCodeInput = document.getElementById('room-code');
         const errorMessage = document.getElementById('error-message');
         const questionText = document.getElementById('question-text');
+        const hintDiv = document.getElementById('hint');
         const optionsContainer = document.getElementById('options-container');
         const leaderboardList = document.getElementById('leaderboard-list');
+        const finalScore = document.getElementById('final-score');
+        const timerBar = document.getElementById('timer-bar');
+        const timerText = document.getElementById('timer-text');
+
+        // Disable auto rejoin to ensure fresh sessions
 
         function showError(message) {
             errorMessage.textContent = message;
@@ -70,58 +93,118 @@
         // Join Quiz
         joinBtn.addEventListener('click', () => {
             const playerName = playerNameInput.value.trim();
-            const roomCode = roomCodeInput.value.trim();
-            if (playerName && roomCode) {
-                currentRoomCode = roomCode;
-                socket.emit('join-quiz', { playerName, roomCode });
+            if (playerName) {
+                currentPlayerName = playerName;
+                localStorage.setItem('gfg_player_name', playerName);
+                localStorage.removeItem('gfg_quiz_completed');
+
+                socket.emit('join-quiz', {
+                    playerName,
+                    isReconnect: false
+                });
             } else {
-                showError('Please enter both name and room code');
+                showError('Please enter your name');
             }
         });
 
+        // New Player button handler: open a fresh page
+        newPlayerBtn.addEventListener('click', () => {
+            localStorage.removeItem('gfg_player_name');
+            localStorage.removeItem('gfg_quiz_completed');
+            window.open(window.location.href, '_blank');
+            window.close();
+        });
+
         // Handle join response
-        socket.on('joined-successfully', ({ questions: quizQuestions, isActive }) => {
+        socket.on('joined-successfully', ({ questions: quizQuestions, isActive, isCompleted: completed, currentQuestion }) => {
             questions = quizQuestions;
             joinScreen.style.display = 'none';
             topPlayers.style.display = 'block';
-            if (isActive) {
-                startQuiz();
+
+            if (completed) {
+                showCompletedScreen();
+            } else if (isActive) {
+                startQuiz(currentQuestion);
             } else {
                 waitingScreen.style.display = 'block';
             }
         });
 
+        function showCompletedScreen() {
+            quizScreen.style.display = 'none';
+            waitingScreen.style.display = 'none';
+            completedScreen.style.display = 'block';
+            isCompleted = true;
+            localStorage.setItem('gfg_quiz_completed', 'true');
+        }
+
         socket.on('join-error', (message) => {
             showError(message);
         });
 
-        // Quiz starts
         socket.on('quiz-started', ({ questions: quizQuestions }) => {
             questions = quizQuestions;
-            startQuiz();
+            if (!isCompleted) {
+                startQuiz();
+            }
         });
 
-        function startQuiz() {
+        function startQuiz(resumeQuestion = 0) {
             waitingScreen.style.display = 'none';
             quizScreen.style.display = 'block';
+            currentQuestionIndex = resumeQuestion;
+            displayQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            clearTimeout(hintTimeout);
+            timeLeft = 30;
+            questionStartTime = Date.now();
+            timerText.textContent = timeLeft;
+            timerBar.style.width = '100%';
+
+            // Show hint after 15 seconds
+            hintTimeout = setTimeout(() => {
+                if (questions[currentQuestionIndex] && questions[currentQuestionIndex].hint) {
+                    hintDiv.textContent = `Hint: ${questions[currentQuestionIndex].hint}`;
+                    hintDiv.style.display = 'block';
+                }
+            }, 15000);
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerText.textContent = timeLeft;
+                timerBar.style.width = `${(timeLeft / 30) * 100}%`;
+                if (timeLeft <= 10) {
+                    timerBar.style.backgroundColor = '#dc3545';
+                } else {
+                    timerBar.style.backgroundColor = 'var(--gfg-green)';
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeExpired();
+                }
+            }, 1000);
+        }
+
+        function handleTimeExpired() {
+            socket.emit('time-expired', { questionIndex: currentQuestionIndex });
+            currentQuestionIndex++;
             displayQuestion();
         }
 
         function displayQuestion() {
             if (currentQuestionIndex >= questions.length) {
-                questionText.innerHTML = `
-                    <div class="player-card">
-                        <h2><i class="fas fa-check-circle"></i> Quiz completed!</h2>
-                        <p>Check the leaderboard for your final position.</p>
-                    </div>
-                `;
-                optionsContainer.innerHTML = '';
+                socket.emit('quiz-completed');
+                showCompletedScreen();
                 return;
             }
-
             const question = questions[currentQuestionIndex];
             questionText.textContent = `Question ${currentQuestionIndex + 1}: ${question.question}`;
             optionsContainer.innerHTML = '';
+            hintDiv.style.display = 'none';
+            hintDiv.textContent = '';
 
             question.options.forEach((option, index) => {
                 const button = document.createElement('button');
@@ -130,25 +213,34 @@
                 button.addEventListener('click', () => submitAnswer(index));
                 optionsContainer.appendChild(button);
             });
+
+            startTimer();
         }
 
         function submitAnswer(answerIndex) {
+            clearInterval(timer);
+            clearTimeout(hintTimeout);
+            const timeSpent = Math.min(30, Math.round((Date.now() - questionStartTime) / 1000));
             socket.emit('submit-answer', {
-                roomCode: currentRoomCode,
                 questionIndex: currentQuestionIndex,
-                answer: answerIndex
+                answer: answerIndex,
+                timeSpent: timeSpent
             });
-
             currentQuestionIndex++;
             displayQuestion();
         }
 
-        // Update Leaderboard
+        socket.on('question-update', (data) => {
+            if (data.currentQuestion !== undefined) {
+                currentQuestionIndex = data.currentQuestion;
+                displayQuestion();
+            }
+        });
+
         socket.on('leaderboard-update', (players) => {
             leaderboardList.innerHTML = '';
-            players
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 10) // Show only top 10 players in player view
+            players.sort((a, b) => b.score - a.score)
+                .slice(0, 10)
                 .forEach((player, index) => {
                     const li = document.createElement('div');
                     li.className = 'leaderboard-item';
@@ -158,22 +250,26 @@
                             <div class="player-name">${player.name}</div>
                             <div class="score">${player.score} points</div>
                         </div>
-                        ${player.completed ? '<i class="fas fa-check-circle" style="color: var(--gfg-green)"></i>' : ''}
-                    `;
+                        ${player.completed ? '<i class="fas fa-check-circle" style="color: var(--gfg-green)"></i>' : ''}`;
                     leaderboardList.appendChild(li);
+                    if (player.name === currentPlayerName && player.completed) {
+                        finalScore.textContent = player.score;
+                    }
                 });
         });
 
-        // Handle disconnection
         socket.on('disconnect', () => {
-            showError('Lost connection to server. Please refresh the page.');
+            if (!isCompleted) {
+                showError('Lost connection to server. Trying to reconnect...');
+            }
         });
 
-        // Handle reconnection
         socket.on('connect', () => {
-            if (currentRoomCode) {
-                const playerName = playerNameInput.value.trim();
-                socket.emit('join-quiz', { playerName, roomCode: currentRoomCode });
+            if (currentPlayerName && !isCompleted) {
+                socket.emit('join-quiz', {
+                    playerName: currentPlayerName,
+                    isReconnect: true
+                });
             }
         });
     </script>

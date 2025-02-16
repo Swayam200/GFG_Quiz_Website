@@ -31,6 +31,36 @@ body {
     padding: 20px;
 }
 
+/* Timer styles */
+#timer-container {
+    width: 100%;
+    height: 30px;
+    background-color: #ddd;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+#timer-bar {
+    height: 100%;
+    width: 100%;
+    background-color: var(--gfg-green);
+    transition: width 1s linear;
+}
+
+#timer-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    line-height: 30px;
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 /* Host specific styles */
 .host-container {
     max-width: 100%;
@@ -108,14 +138,21 @@ button:disabled {
     text-align: left;
     margin: 10px 0;
     padding: 15px;
-    background-color: white;
+    background-color: #f2f2f2;
     border: 1px solid #ddd;
     transition: all 0.3s;
+    color: var(--gfg-dark);
 }
 
 .option-btn:hover {
-    background-color: var(--gfg-light);
+    background-color: #e6e6e6;
     border-left: 4px solid var(--gfg-green);
+}
+
+.option-letter {
+    font-weight: bold;
+    color: var(--gfg-green);
+    margin-right: 8px;
 }
 
 #question-text {
@@ -155,6 +192,26 @@ button:disabled {
     background-color: #ffe6e6;
     border-radius: 4px;
     margin-top: 10px;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--gfg-green);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @media screen and (max-width: 768px) {
