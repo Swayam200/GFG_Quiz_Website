@@ -11,96 +11,97 @@ let isActive = false;
 
 const questions = [
     {
-        question: "I compute but do not think. I am the heart of every PC. What am I?",
-        options: ["CPU", "RAM", "GPU", "Motherboard"],
-        correct: 0,
-        hint: "I execute instructions and perform arithmetic."
-    },
-    {
-        question: "I store data temporarily, but lose everything when power is off. What am I?",
-        options: ["Hard Drive", "SSD", "RAM", "Cache"],
+        question: "I travel the world but always stay in my corner. What am I?",
+        options: ["A map", "A compass", "A stamp", "A postcard"],
         correct: 2,
-        hint: "I'm volatile memory."
+        hint: "I'm often found on letters and envelopes."
     },
     {
-        question: "I am a permanent storage device that spins and stores your digital memories. What am I?",
-        options: ["SSD", "Hard Disk Drive", "RAM", "CD-ROM"],
+        question: "What technology uses electromagnetic fields to transfer power wirelessly to devices like smartphones and electric vehicles?",
+        options: ["Solar Charging", "Wireless Charging", "Inductive Cabling", "Magnetron Power"],
         correct: 1,
-        hint: "I have moving parts and magnetic platters."
+        hint: "I remove the need for physical cables to charge devices."
     },
     {
-        question: "I am a small chip that temporarily holds data for quick access by your CPU. What am I?",
-        options: ["Cache", "BIOS", "GPU", "RAM"],
-        correct: 0,
-        hint: "I improve speed by storing frequently accessed data."
-    },
-    {
-        question: "I am the language that computers understand at the lowest level. What am I?",
-        options: ["Assembly", "Python", "JavaScript", "HTML"],
-        correct: 0,
-        hint: "I am used to write low-level instructions."
-    },
-    {
-        question: "I am the protocol that secures websites, making sure your data is encrypted. What am I?",
-        options: ["HTTP", "FTP", "SSL", "SMTP"],
+        question: "When you're lost, I'll show your location on a map. I'll give you turn-by-turn directions to get you back on track. What am I?",
+        options: ["Compass", "Odometer", "GPS Navigation", "Altimeter"],
         correct: 2,
-        hint: "I provide a secure connection between server and client."
+        hint: "I rely on satellites to guide you."
     },
     {
-        question: "I translate high-level code into machine language. What am I?",
-        options: ["Interpreter", "Compiler", "Assembler", "Linker"],
+        question: "I let you type, create spreadsheets, make presentations, and more. I'm the main set of programs you use on a computer. What am I?",
+        options: ["Web Browser", "Office Productivity Software", "Database Management System", "Code Editor"],
         correct: 1,
-        hint: "I convert source code into an executable."
+        hint: "I include tools like Word, Excel, and PowerPoint."
     },
     {
-        question: "I am a network of networks, connecting computers globally. What am I?",
-        options: ["LAN", "Internet", "Intranet", "Extranet"],
-        correct: 1,
-        hint: "I enable worldwide communication."
-    },
-    {
-        question: "I am a device that modulates and demodulates digital signals. What am I?",
-        options: ["Modem", "Router", "Switch", "Hub"],
-        correct: 0,
-        hint: "I translate digital data into analog signals."
-    },
-    {
-        question: "I manage IP addresses and direct traffic on a network. What am I?",
-        options: ["Switch", "Router", "Bridge", "Repeater"],
-        correct: 1,
-        hint: "I determine the best path for data packets."
-    },
-    {
-        question: "I am non-volatile memory used in smartphones to store apps and data. What am I?",
-        options: ["RAM", "ROM", "SSD", "Cache"],
-        correct: 1,
-        hint: "I store firmware and persistent data."
-    },
-    {
-        question: "I help you find and fix errors in your code by stepping through it. What am I?",
-        options: ["Debugger", "Compiler", "Interpreter", "Profiler"],
-        correct: 0,
-        hint: "I help you locate bugs in your code."
-    },
-    {
-        question: "I am a virtual copy of a physical server, offering flexible resources. What am I?",
-        options: ["Cloud", "Virtual Machine", "Container", "Cluster"],
-        correct: 1,
-        hint: "I emulate a physical computer in software."
-    },
-    {
-        question: "I am a lightweight, portable package that contains everything needed to run an application. What am I?",
-        options: ["Container", "Virtual Machine", "Serverless Function", "Cloud Service"],
-        correct: 0,
-        hint: "I isolate applications from the environment."
-    },
-    {
-        question: "I ensure your network is safe by blocking unauthorized access. What am I?",
-        options: ["Router", "Switch", "Firewall", "Modem"],
+        question: "I'm billions of pages filled with information. I'm one giant collection of websites. What am I?",
+        options: ["The Internet", "The Cloud", "The World Wide Web", "A Search Engine"],
         correct: 2,
-        hint: "I monitor and control incoming and outgoing traffic."
+        hint: "I was invented by Tim Berners-Lee in 1989."
+    },
+    {
+        question: "I'm a messaging app that lets you chat in groups or privately. You can even video call friends all over the world. What am I?",
+        options: ["Youtube", "VTOP", "WhatsApp", "Twitter/X"],
+        correct: 2,
+        hint: "I use end-to-end encryption for security."
+    },
+    {
+        question: "I store code snippets that programmers can reuse instead of writing from scratch. I help boost productivity. What am I?",
+        options: ["GitHub", "HackerRank", "Bitbucket", "Jira"],
+        correct: 0,
+        hint: "I'm a popular version control repository hosting service."
+    },
+    {
+        question: "I'm a social network pioneer who co-founded Facebook. My name rhymes with 'lark.' Who am I?",
+        options: ["Elon Musk", "Mark Zuckerberg", "Jeff Bezos", "Bill Gates"],
+        correct: 1,
+        hint: "I launched my social media empire from a college dorm room."
+    },
+    {
+        question: "I'm thin, flat, and rectangular. I fit in your pocket and let you talk to, text, or video chat anyone in the world. What am I?",
+        options: ["Tablet", "Mobile Phone", "Smartwatch", "Landline"],
+        correct: 1,
+        hint: "Nearly everyone owns one of me today."
+    },
+    {
+        question: "I hold your secrets, day and night. In my grasp, they are kept out of sight. I am always near, a click away. What am I that keeps data safe?",
+        options: ["Flashlight", "Password", "Camera", "Padlock"],
+        correct: 1,
+        hint: "I am often a combination of letters, numbers, and symbols."
+    },
+    {
+        question: "I am a space where you can interact and play, in a simulated world where you can stay. I offer adventures and experiences to explore. What am I that provides a digital door?",
+        options: ["Virtual Reality", "Augmented Reality", "Metaverse", "Simulation Software"],
+        correct: 0,
+        hint: "I require a headset for full immersion."
+    },
+    {
+        question: "I bridge the gap between different systems, enabling data transfer and seamless rhythms. I am essential for interoperability’s key. What am I that links with technology?",
+        options: ["API (Application Programming Interface)", "Protocol", "Middleware", "Gateway"],
+        correct: 0,
+        hint: "I allow different software applications to communicate."
+    },
+    {
+        question: "I am born of logic but thrive on emotion. I can mimic thought but have no soul. What am I?",
+        options: ["Neural Network", "Artificial Intelligence", "Chatbot", "Supercomputer"],
+        correct: 1,
+        hint: "I am at the core of modern automation and smart assistants."
+    },
+    {
+        question: "I am the ephemeral ghost in the machine, fleeting yet crucial. I am created and destroyed in milliseconds, yet upon me rests the performance of the whole. What am I?",
+        options: ["Cache Memory", "SSD", "RAM", "Cloud Storage"],
+        correct: 2,
+        hint: "I am a type of volatile memory that loses data when powered off."
+    },
+    {
+        question: "I am the embodiment of intelligent automation, capable of learning and adapting to new environments. I mimic human cognitive abilities and perform complex tasks, but my sentience is purely simulated. What am I?",
+        options: ["ChatGPT", "Neural Network", "A Deep Learning Model", "Quantum Computer"],
+        correct: 2,
+        hint: "I am the foundation of modern AI-driven breakthroughs."
     }
 ];
+
 
 initCarnivalRoom();
 
